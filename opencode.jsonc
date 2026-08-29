@@ -1,0 +1,108 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  // Escolha um modelo real retornado por `opencode models`.
+  // "model": "seu-provider/seu-modelo",
+  // "small_model": "seu-provider/seu-modelo-menor",
+  "default_agent": "plan-refine",
+  "subagent_depth": 1,
+  "share": "disabled",
+  "autoupdate": "notify",
+  "snapshot": true,
+  // Cada projeto habilita apenas o que faz sentido para seu stack.
+  "formatter": false,
+  "lsp": false,
+  "watcher": {
+    "ignore": [
+      "**/.git/**",
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/target/**",
+      "**/.venv/**",
+      "**/vendor/**"
+    ]
+  },
+  "skills": {
+    "paths": [
+      "{env:HOME}/.config/opencode/vendor/agent-skills/skills"
+    ]
+  },
+  "references": {
+    "addy-agent-skills": {
+      "path": "~/.config/opencode/vendor/agent-skills",
+      "description": "Skills e checklists de engenharia do Addy Osmani; tratar como somente leitura",
+      "hidden": true
+    }
+  },
+  "permission": {
+    // Base conservadora: leitura e pesquisa são automáticas; mutações perguntam.
+    "*": "ask",
+    "read": {
+      "*": "allow",
+      "*.env": "deny",
+      "*.env.*": "deny",
+      "*.env.example": "allow",
+      "*.env.sample": "allow",
+      "*.pem": "deny",
+      "*.key": "deny",
+      "*credentials*": "deny"
+    },
+    "glob": "allow",
+    "grep": "allow",
+    "list": "allow",
+    "lsp": "allow",
+    "skill": "allow",
+    "question": "allow",
+    "webfetch": "allow",
+    "websearch": "allow",
+    "todowrite": "allow",
+    "edit": {
+      "*": "ask",
+      "~/.config/opencode/vendor/agent-skills/*": "deny"
+    },
+    "bash": {
+      "*": "ask",
+      "ls *": "allow",
+      "cat *": "allow",
+      "head *": "allow",
+      "tail *": "allow",
+      "find *": "allow",
+      "tree *": "allow",
+      "pwd": "allow",
+      "git status*": "allow",
+      "git diff*": "allow",
+      "git log*": "allow",
+      "git show*": "allow",
+      "git branch*": "allow",
+      "git tag*": "allow",
+      "git remote -v": "allow",
+      "npm ls*": "allow",
+      "pnpm ls*": "allow",
+      "yarn list*": "allow",
+      "pip list*": "allow",
+      "pip show*": "allow",
+      "python --version": "allow",
+      "node --version": "allow",
+      "go version": "allow",
+      "cargo --version": "allow",
+      "java -version": "allow",
+      "mvn -version": "allow",
+      "gradle -version": "allow",
+      "docker --version": "allow",
+      "docker ps*": "allow",
+      "docker images*": "allow",
+      "systemctl status*": "allow",
+      "env": "deny",
+      "printenv": "deny"
+    },
+    "task": "ask",
+    "external_directory": {
+      "*": "allow",
+      "~/secrets/**": "deny",
+      "~/.ssh/**": "deny",
+      "~/.aws/**": "deny",
+      "~/.gnupg/**": "deny"
+    },
+    "doom_loop": "ask"
+  }
+}

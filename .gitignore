@@ -1,0 +1,22 @@
+# Dependências Node (regeneráveis via npm install)
+node_modules/
+
+# Cache e arquivos temporários do opencode
+.cache/
+*.tmp
+*.log
+
+# Sessões e histórico local (não compartilhar entre máquinas)
+.sessions/
+.history/
+
+# Arquivos de ambiente e segredos
+.env
+.env.*
+*.pem
+*.key
+*credentials*
+
+# OS
+.DS_Store
+Thumbs.db
