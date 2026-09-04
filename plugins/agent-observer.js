@@ -7,15 +7,19 @@
 //   traces/metrics/agents.json | models.json — agregados
 //
 // Desligar: OPENCODE_OBSERVE=off
-// Sem toasts: OPENCODE_OBSERVE_TOASTS=off
+// Desligar tudo: OPENCODE_OBSERVE=off
+// Toasts no TUI: OPENCODE_OBSERVE_TOASTS=on (padrão: off para evitar poluição visual no terminal)
+// Notificações desktop: OPENCODE_OBSERVE_DESKTOP=off (padrão: on via notify-send)
 
+import { spawn } from "node:child_process"
 import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises"
 import { existsSync } from "node:fs"
 import { homedir } from "node:os"
 import { join } from "node:path"
 
 const ENABLED = process.env.OPENCODE_OBSERVE !== "off"
-const TOASTS = process.env.OPENCODE_OBSERVE_TOASTS !== "off"
+const isToastsEnabled = () => process.env.OPENCODE_OBSERVE_TOASTS === "on"
+const isDesktopEnabled = () => process.env.OPENCODE_OBSERVE_DESKTOP !== "off"
 
 const BASE = join(homedir(), ".config", "opencode", "traces")
 const PREVIEW_LIMIT = 2000 // chars de payload no JSONL
@@ -255,10 +259,46 @@ async function persistTrace(sessionID) {
   }
 }
 
-// ---------- toasts ----------
+// ---------- notificações e toasts ----------
+
+function notifyDesktop(title, message, variant = "info") {
+  if (!isDesktopEnabled()) return
+  try {
+    const urgencyMap = {
+      error: "critical",
+      warning: "normal",
+      info: "low",
+      success: "normal",
+    }
+    const iconMap = {
+      error: "dialog-error",
+      warning: "dialog-warning",
+      info: "dialog-information",
+      success: "dialog-information",
+    }
+    const urgency = urgencyMap[variant] || "normal"
+    const icon = iconMap[variant] || "dialog-information"
+    const child = spawn(
+      "notify-send",
+      ["-a", "OpenCode", "-u", urgency, "-i", icon, String(title), String(message)],
+      {
+        detached: true,
+        stdio: "ignore",
+      }
+    )
+    child.on("error", () => {})
+    child.unref()
+  } catch {
+    // Silencioso se notify-send falhar ou ambiente headless
+  }
+}
 
 async function toast(client, title, message, variant = "info", duration = 5000) {
-  if (!TOASTS) return
+  // 1. Notificação nativa do sistema operacional (Desktop)
+  notifyDesktop(title, message, variant)
+
+  // 2. Toast na tela do TUI (desativado por padrão para evitar poluição visual)
+  if (!isToastsEnabled()) return
   try {
     await client.tui.showToast({ body: { title, message, variant, duration } })
   } catch {

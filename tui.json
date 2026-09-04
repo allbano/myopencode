@@ -12,7 +12,7 @@
   },
   "attention": {
     "enabled": true,
-    "notifications": true,
+    "notifications": false,
     "sound": true,
     "volume": 0.4
   }

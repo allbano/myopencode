@@ -16,6 +16,9 @@ const SID = "ses_smoketest"
 const snapA = existsSync(METRICS_A) ? await readFile(METRICS_A, "utf8") : null
 const snapM = existsSync(METRICS_M) ? await readFile(METRICS_M, "utf8") : null
 
+// ativa toasts explicitamente no smoke test para validar a integração com showToast
+process.env.OPENCODE_OBSERVE_TOASTS = "on"
+
 let toasts = 0
 const client = { tui: { showToast: async () => { toasts++; return true } } }
 const hooks = await AgentObserver({ client })
