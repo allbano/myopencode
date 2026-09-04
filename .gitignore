@@ -10,9 +10,11 @@ node_modules/
 .sessions/
 .history/
 
+# Traces de runtime do agent-observer (dados locais, podem conter snippets)
+traces/
+
 # Arquivos de ambiente e segredos
 .env
-.env.*
 *.pem
 *.key
 *credentials*

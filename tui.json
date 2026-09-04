@@ -9,5 +9,11 @@
     "session_child_cycle": "right",
     "session_child_cycle_reverse": "left",
     "session_parent": "up"
+  },
+  "attention": {
+    "enabled": true,
+    "notifications": true,
+    "sound": true,
+    "volume": 0.4
   }
 }
