@@ -1,4 +1,14 @@
-# 001v1_MAN_opencode.md - Manual executavel da CLI OpenCode
+---
+title: "Manual Executável e Especificação da CLI OpenCode"
+slug: "opencode-cli"
+version: 1.1.0
+status: "active"
+last_reviewed: 2026-09-04
+owners:
+  - "@albano"
+---
+
+# Especificação Técnica e Manual da CLI OpenCode
 
 > **Ambiente verificado:** OpenCode `1.18.25`, Linux x64  
 > **Data da verificacao:** 2026-08-31  
@@ -1175,9 +1185,9 @@ Filtrar por glob:
 
 ```bash
 $ opencode debug rg files --glob "docs/**/*.md" --limit 5
-docs/001v1_MAN_opencode.md
+docs/spec/opencode-cli.md
 docs/adr/<arquivo>.md
-docs/implements/<arquivo>.md
+docs/plan/<arquivo>.md
 ...
 ```
 
@@ -1243,19 +1253,17 @@ $ opencode debug file read package.json | jq -r .content | base64 -d
 $ opencode debug file list docs
 [
   { "path": "docs/adr/", "type": "directory" },
-  { "path": "docs/chats/", "type": "directory" },
-  { "path": "docs/implements/", "type": "directory" },
   { "path": "docs/plan/", "type": "directory" },
-  { "path": "docs/001v1_MAN_opencode.md", "type": "file" }
+  { "path": "docs/progress/", "type": "directory" },
+  { "path": "docs/spec/", "type": "directory" }
 ]
 ```
 
 ### 17.14 Arquivo: pesquisar por nome
 
 ```bash
-$ opencode debug file search "001v1_MAN"
-docs/001v1_MAN_opencode.md
-docs/plan/001v1_PLAN_opencode_configs.md
+$ opencode debug file search "opencode-cli"
+docs/spec/opencode-cli.md
 ...
 ```
 

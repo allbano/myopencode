@@ -1,11 +1,18 @@
-# 001v1_ADR_opencode_configs_explains.md — ADR: Git-Flow e Restauração da Configuração OpenCode
+---
+title: "Git-Flow e Restauração da Configuração OpenCode"
+slug: "opencode-configs"
+version: 1.0.0
+status: "active"
+last_reviewed: 2026-09-04
+owners:
+  - "@albano"
+---
 
-> **Data:** 2026-08-29  
-> **Autor:** OpenCode (assistente)  
+# ADR 0001: Git-Flow e Restauração da Configuração OpenCode
+
 > **Tipo:** Architecture Decision Record (ADR)  
-> **Versão:** 1.0  
-> **Status:** Proposto  
-> **Relacionado:** 001v1_PLAN_opencode_configs.md, 001v1_IMP_opencode_configs.md
+> **Status:** Aceito  
+> **Relacionado:** [`docs/plan/opencode-configs.md`](file:///home/albano/.config/opencode/docs/plan/opencode-configs.md), [`docs/spec/opencode-configs.md`](file:///home/albano/.config/opencode/docs/spec/opencode-configs.md)
 
 ---
 
@@ -21,7 +28,7 @@ Este ADR documenta as decisões arquiteturais sobre como o repositório Git de `
 
 Adotamos **Trunk-Based Development** simplificado:
 
-```
+```text
 main (sempre estável e restaurável)
   │
   ├── feature/<descricao>     ← mudanças de configuração, novos agentes
@@ -37,10 +44,8 @@ main (sempre estável e restaurável)
 
 ### 2.2 Convenção de commits
 
-```
+```text
 <tipo>: <descrição curta>
-
-<corpo opcional explicando o porquê>
 ```
 
 | Tipo | Uso |
@@ -233,7 +238,7 @@ Se a pasta `~/.config/opencode/` for completamente perdida:
 
 1. Restaurar do backup mais recente.
 2. Se não houver backup, clonar do remote (se existir).
-3. Se não houver remote, reconfigurar manualmente usando os documentos em `docs/implementes/` como referência.
+3. Se não houver remote, reconfigurar manualmente usando os documentos em [`docs/spec/opencode-configs.md`](file:///home/albano/.config/opencode/docs/spec/opencode-configs.md) como referência.
 
 ---
 
@@ -252,7 +257,6 @@ Se a pasta `~/.config/opencode/` for completamente perdida:
 ## 8. Consequências desta Decisão
 
 ### Positivas
-
 - ✅ Configuração totalmente versionada e auditável.
 - ✅ Restauração reproduzível em qualquer máquina.
 - ✅ Repositório leve (~50 KB sem vendor).
@@ -260,20 +264,23 @@ Se a pasta `~/.config/opencode/` for completamente perdida:
 - ✅ Documentação completa do processo.
 
 ### Negativas / Riscos
-
 - ⚠️ Restauração requer internet para baixar o submodule (mitigado: cópia manual).
 - ⚠️ Usuário precisa lembrar de commitar mudanças (mitigado: hooks, lembretes).
 - ⚠️ Submodule adiciona complexidade para quem não conhece Git (mitigado: este documento).
 
 ---
 
-## 9. Referências
+## 9. Histórico Semântico de Mudanças
+
+| Versão | Data | Tipo | Descrição da Alteração |
+| :--- | :--- | :--- | :--- |
+| **1.0.0** | 2026-08-29 | INITIAL | Versão inicial aceita do ADR de configuração e Git-Flow. |
+
+---
+
+## 10. Referências
 
 - [Git Submodules — Atlassian](https://www.atlassian.com/git/tutorials/git-submodule)
 - [Trunk-Based Development](https://trunkbaseddevelopment.com/)
 - [OpenCode — Configuração](https://opencode.ai/docs/config/)
-- Documentos relacionados: `001v1_PLAN_opencode_configs.md`, `001v1_IMP_opencode_configs.md`
-
----
-
-*ADR — Architecture Decision Record. Para o planejamento, veja `001v1_PLAN_opencode_configs.md`. Para a implementação, veja `001v1_IMP_opencode_configs.md`.*
+- Documentos relacionados: [`docs/plan/opencode-configs.md`](file:///home/albano/.config/opencode/docs/plan/opencode-configs.md), [`docs/spec/opencode-configs.md`](file:///home/albano/.config/opencode/docs/spec/opencode-configs.md)

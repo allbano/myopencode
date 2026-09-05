@@ -1,11 +1,18 @@
-# 002v1_ADR_agent-runtime-observability_explains.md — ADR: Observabilidade de Agentes via Plugin + Traces Locais
+---
+title: "Observabilidade de Agentes via Plugin e Traces Locais"
+slug: "agent-runtime-observability"
+version: 1.0.0
+status: "active"
+last_reviewed: 2026-09-04
+owners:
+  - "@albano"
+---
 
-> **Data:** 2026-08-31  
-> **Autor:** OpenCode (assistente)  
+# ADR 0002: Observabilidade de Agentes via Plugin e Traces Locais
+
 > **Tipo:** Architecture Decision Record (ADR)  
-> **Versão:** 1.0  
 > **Status:** Aceito  
-> **Relacionado:** `002v1_PLAN_agent-runtime-observability.md`, `002v1_IMP_agent-runtime-observability.md`
+> **Relacionado:** [`docs/plan/agent-runtime-observability.md`](file:///home/albano/.config/opencode/docs/plan/agent-runtime-observability.md), [`docs/spec/agent-runtime-observability.md`](file:///home/albano/.config/opencode/docs/spec/agent-runtime-observability.md), [`docs/adr/0003-desktop-notifications.md`](file:///home/albano/.config/opencode/docs/adr/0003-desktop-notifications.md)
 
 ---
 
@@ -74,13 +81,11 @@ Toda a instrumentação precisava respeitar dois limites: (a) apenas a API públ
 
 **Decisão — três compensações combinadas:**
 
-1. **`attention` nativo** (`tui.json`): habilita som + notificação desktop do **próprio produto** para `permission`, `error`, `done` e `subagent_done`. Cobre "quero saber quando algo termina/erra" com zero código.
-2. **Toasts via `client.tui.showToast`**: disparados pelo plugin em subagente concluído (com duração), permissão solicitada e erro de sessão.
+1. **`attention` nativo** (`tui.json`): habilita som + notificação desktop do **próprio produto** para `permission`, `error`, `done` e `subagent_done`.
+2. **Toasts via `client.tui.showToast`**: disparados pelo plugin em subagente concluído (com duração), permissão solicitada e erro de sessão (posteriormente aprimorado no ADR 0003).
 3. **CLIs no segundo terminal**: `observe-tail.sh` (tempo real, formato legível) e `trace-search.mjs` (histórico). Um `tmux split` ou janela ao lado resolve o "painel" sem violar a API.
 
 **Alternativa rejeitada — fork do TUI:** manutenção perpétua contra upstream; quebra a cada update; fora do espírito de configuração local.
-
-**Gatilho de revisão:** se o opencode introduzir extensões de UI/layout para plugins (acompanhar releases), reabrir esta decisão.
 
 ---
 
@@ -90,7 +95,7 @@ Toda a instrumentação precisava respeitar dois limites: (a) apenas a API públ
 
 **Por quê:** toast é canal de interrupção. Um toast por `read`/`glob` geraria dezenas por minuto e treinaria o usuário a ignorar todos (falha clássica de alerting descrita na skill `observability-and-instrumentation`: *"a noisy pager trains people to ignore it"*). O fluxo detalhado já está no terminal ao lado via `observe-tail.sh`.
 
-**Escape hatch:** `OPENCODE_OBSERVE_TOASTS=off`.
+*(Nota: esta decisão foi refinada no [`docs/adr/0003-desktop-notifications.md`](file:///home/albano/.config/opencode/docs/adr/0003-desktop-notifications.md), tornando os toasts da TUI estritamente opt-in para evitar poluição visual).*
 
 ---
 
@@ -98,10 +103,10 @@ Toda a instrumentação precisava respeitar dois limites: (a) apenas a API públ
 
 **Decisões de engenharia embutidas no código:**
 
-- **Try/catch total:** nenhum hook propaga exceção — um bug no observador nunca interrompe o trabalho do agente (o observado não pode matar o observador... nem o observador o trabalho).
+- **Try/catch total:** nenhum hook propaga exceção — um bug no observador nunca interrompe o trabalho do agente.
 - **Kill-switch global:** `OPENCODE_OBSERVE=off` curto-circuita na inicialização, sem custo de runtime.
-- **Payloads defensivos:** `??`, `?.` e `truncate()` em todos os campos externos — o plugin sobrevive a mudanças de shape dos eventos (degrada para campos ausentes, não crash).
-- **Sem dados sensíveis além do necessário:** JSONL truncado; `traces/` no `.gitignore`; nada sai da máquina. Herda-se a postura de segurança do próprio opencode (a permissão para ler `.env` etc. continua sendo decidida pelo sistema de permissões, não pelo plugin).
+- **Payloads defensivos:** `??`, `?.` e `truncate()` em todos os campos externos — o plugin sobrevive a mudanças de shape dos eventos.
+- **Sem dados sensíveis além do necessário:** JSONL truncado; `traces/` no `.gitignore`; nada sai da máquina.
 
 ---
 
@@ -130,18 +135,23 @@ Toda a instrumentação precisava respeitar dois limites: (a) apenas a API públ
 **Negativas / aceitas:**
 - Sem painel embutido no TUI (limitação da API) → fluxo recomendado usa segundo terminal.
 - Métricas podem perder o último delta em kill abrupto do processo.
-- Campos de eventos reais precisam ser conferidos na primeira sessão real (fixtures foram baseadas na documentação, não em tráfego capturado).
 
 ---
 
-## 10. Referências
+## 10. Histórico Semântico de Mudanças
+
+| Versão | Data | Tipo | Descrição da Alteração |
+| :--- | :--- | :--- | :--- |
+| **1.0.0** | 2026-08-31 | INITIAL | Versão inicial aceita da observabilidade de agentes. |
+
+---
+
+## 11. Referências
 
 - [OpenCode — Plugins](https://opencode.ai/docs/plugins/) — hooks e eventos disponíveis
 - [OpenCode — TUI](https://opencode.ai/docs/tui/) — seção `attention` e sons nativos
 - [OpenCode — SDK](https://opencode.ai/docs/sdk/) — `tui.showToast`, `session.messages`
-- Skill vendor: `observability-and-instrumentation` (sinais certos para cada pergunta; anti-padrões de alerting)
-- Implementação: `docs/implements/002v1_IMP_agent-runtime-observability.md`
-
----
-
-*ADR — Architecture Decision Record. Para o plano, veja `docs/plan/002v1_PLAN_agent-runtime-observability.md`. Para a execução e evidências, veja `docs/implements/002v1_IMP_agent-runtime-observability.md`.*
+- Skill vendor: `observability-and-instrumentation`
+- Especificação canônica: [`docs/spec/agent-runtime-observability.md`](file:///home/albano/.config/opencode/docs/spec/agent-runtime-observability.md)
+- Planejamento: [`docs/plan/agent-runtime-observability.md`](file:///home/albano/.config/opencode/docs/plan/agent-runtime-observability.md)
+- ADR complementar: [`docs/adr/0003-desktop-notifications.md`](file:///home/albano/.config/opencode/docs/adr/0003-desktop-notifications.md)

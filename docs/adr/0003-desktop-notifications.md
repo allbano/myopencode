@@ -1,17 +1,24 @@
-# 003v1_ADR_desktop-notifications_explains.md — ADR: Notificações Desktop Nativas (Linux) e Limpeza Visual da TUI
+---
+title: "Notificações Desktop Nativas (Linux) e Limpeza Visual da TUI"
+slug: "desktop-notifications"
+version: 1.0.0
+status: "active"
+last_reviewed: 2026-09-04
+owners:
+  - "@albano"
+---
 
-> **Data:** 2026-09-04  
-> **Autor:** OpenCode (assistente)  
+# ADR 0003: Notificações Desktop Nativas (Linux) e Limpeza Visual da TUI
+
 > **Tipo:** Architecture Decision Record (ADR)  
-> **Versão:** 1.0  
 > **Status:** Aceito  
-> **Relacionado:** `002v1_ADR_agent-runtime-observability_explains.md`, `002v1_IMP_agent-runtime-observability.md`, `004v1_IMP_desktop-notifications.md`
+> **Relacionado:** [`docs/adr/0002-agent-runtime-observability.md`](file:///home/albano/.config/opencode/docs/adr/0002-agent-runtime-observability.md), [`docs/spec/agent-runtime-observability.md`](file:///home/albano/.config/opencode/docs/spec/agent-runtime-observability.md), [`docs/plan/agent-runtime-observability.md`](file:///home/albano/.config/opencode/docs/plan/agent-runtime-observability.md)
 
 ---
 
 ## 1. Contexto e Problema
 
-Na implementação do sistema de observabilidade (`002v1_ADR_agent-runtime-observability_explains.md`), foram introduzidos toasts na interface TUI via `client.tui.showToast` para sinalizar eventos críticos: conclusão de subagentes, pedidos de permissão e erros de sessão.
+Na implementação do sistema de observabilidade ([`docs/adr/0002-agent-runtime-observability.md`](file:///home/albano/.config/opencode/docs/adr/0002-agent-runtime-observability.md)), foram introduzidos toasts na interface TUI via `client.tui.showToast` para sinalizar eventos críticos: conclusão de subagentes, pedidos de permissão e erros de sessão.
 
 Na utilização prática, o usuário identificou problemas de usabilidade:
 1. **Poluição visual da TUI:** os balões de toast ocupavam a área do terminal onde o código e as saídas das ferramentas estão sendo lidos.
@@ -86,7 +93,7 @@ O usuário alterou no [`tui.json`](file:///home/albano/.config/opencode/tui.json
 1. `"notifications": false`: Desativa a emissão de sequências de escape de terminal nativas do OpenCode (OSC 777 / OSC 9). Isso evita notificações redundantes do terminal que dependem de suporte do emulador (Kitty, WezTerm, Ghostty).
 2. `"sound": true` e `"enabled": true`: Preserva o sintetizador/player de som nativo do OpenCode, mantendo os alertas audíveis requisitados pelo usuário para eventos de atenção (`permission`, `error`, `done`, `subagent_done`).
 
-A combinação de `"notifications": false` no `tui.json` com o novo despachante `notify-send` no plugin resulta em um sistema onde as notificações de tela ocorrem exclusivamente onde devem: no gerenciador de janelas do SO.
+A combinação de `"notifications": false` no `tui.json` com o novo despachante `notify-send` no plugin resulta em um sistema onde as notificações visuais ocorrem exclusivamente no gerenciador de janelas do SO.
 
 ---
 
@@ -97,3 +104,19 @@ A combinação de `"notifications": false` no `tui.json` com o novo despachante 
 | Manter toasts na TUI com menor duração (ex: 1s) | Ainda pisca e polui a saída de código; temporizadores não resolvem a intrusão visual |
 | Instalar biblioteca npm de notificações (ex: `node-notifier`) | Adiciona dependências de terceiros no projeto; o Linux já dispõe de `notify-send` nativo no PATH |
 | Depender de OSC 777 nativo do OpenCode | Suporte irregular entre emuladores de terminal e multiplexadores (`tmux`); não transmite o payload rico gerado pelo observer (ex.: nome do subagente e tempo de execução) |
+
+---
+
+## 7. Histórico Semântico de Mudanças
+
+| Versão | Data | Tipo | Descrição da Alteração |
+| :--- | :--- | :--- | :--- |
+| **1.0.0** | 2026-09-04 | INITIAL | Registro inicial da decisão de notificações desktop e desativação de toasts na TUI. |
+
+---
+
+## 8. Referências
+
+- [`docs/adr/0002-agent-runtime-observability.md`](file:///home/albano/.config/opencode/docs/adr/0002-agent-runtime-observability.md)
+- [`docs/spec/agent-runtime-observability.md`](file:///home/albano/.config/opencode/docs/spec/agent-runtime-observability.md)
+- [`docs/plan/agent-runtime-observability.md`](file:///home/albano/.config/opencode/docs/plan/agent-runtime-observability.md)

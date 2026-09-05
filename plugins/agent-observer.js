@@ -1,4 +1,4 @@
-// agent-observer.js — Observabilidade de agentes em tempo de execução (plano 002v1)
+// agent-observer.js — Observabilidade de agentes em tempo de execução (docs/spec/agent-runtime-observability.md)
 //
 // Captura eventos do opencode e grava:
 //   traces/AAAA-MM-DD/<sessionId>.jsonl      — stream bruto (fonte da verdade)
