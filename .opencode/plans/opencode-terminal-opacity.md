@@ -1,7 +1,7 @@
 ---
 title: "Temas do opencode refletindo a opacidade do terminal (todos os temas)"
 slug: "opencode-terminal-opacity"
-version: 1.1.0
+version: 1.3.0
 status: "implemented"
 last_reviewed: 2026-09-06
 owners:
@@ -112,30 +112,41 @@ Script `~/.config/opencode/tools/sync-transparent-themes.mjs` (Node, ESM):
 
 ### 3.2 Plugin TUI `~/.config/opencode/plugins/theme-opacity-sync.js`
 
-Lógica generalizada (qualquer tema com gêmeo `<tema>-transparent`):
+Máquina de estados com núcleo puro (`nextAction`), generalizada para qualquer tema com
+gêmeo `<tema>-transparent`:
 
 - Lê os state files (`ghostty.conf`, `kitty.conf`) e extrai a opacidade com regex
-  `(?:opacity|background-opacity)\s*=\s*([0-9.]+)`.
-- Opacidade `< 1.0` em qualquer state file → terminal transparente.
-- **Transparente:** se o tema atual não termina em `-transparent` e existe
-  `<atual>-transparent`, troca para o gêmeo.
-- **Opaco:** se o tema atual termina em `-transparent`, volta para o original (remove o
-  sufixo).
-- Respeita escolha manual via `/theme` (só alterna entre pares conhecidos; `system` e temas
-  sem gêmeo são ignorados).
+  `(?:opacity|background-opacity)\s*=\s*([0-9.]+)`; opacidade `< 1.0` em qualquer state
+  file → terminal transparente.
+- **A escolha manual via `/theme` SEMPRE vence:** se o tema atual não foi setado pelo
+  próprio plugin, ele é registrado como tema de base e não é forçado no poll — inclusive
+  escolhas "opacas" em terminal transparente.
+- **O plugin só age quando o ESTADO DO TERMINAL muda entre polls** (toggle `A` no tmux):
+  transparente → gêmeo `<base>-transparent`; opaco → tema de base original.
+- No primeiro poll o estado do terminal é apenas registrado (nenhuma força no start — a
+  piscada de ~1s da v1 deixou de existir).
+- `system` e temas sem gêmeo são ignorados (transições viram no-op).
 - Polling a cada 1s; `api.lifecycle.onDispose` limpa o timer.
-- Módulo: `export default { id: "theme-opacity-sync", tui }` (id obrigatório para file plugin).
+- Módulo: `export default { id: "theme-opacity-sync", tui }` (id obrigatório para file
+  plugin). `nextAction`/`stripSuffix` são exportados nomeados (ignorados pelo loader) para
+  o teste de unidade.
 
 ### 3.3 Editar `~/.config/opencode/tui.json`
 
-Adicionar (preservando `keybinds` e `attention`):
+Adicionar apenas o plugin (preservando `keybinds` e `attention`); **não** definir `theme`:
 
 ```json
-"theme": "opencode",
 "plugin": ["./plugins/theme-opacity-sync.js"]
 ```
 
-Caminho relativo resolve em relação ao config file (`~/.config/opencode/`).
+> **Importante (v1.3.0):** não pinar `theme` no `tui.json`. No start, o TUI resolve o tema
+> assim: `config.theme ?? kv.get("theme", "opencode")` (`packages/tui/src/context/theme.tsx`),
+> com um `createEffect` que reaplica `config.theme` quando definido. Se `theme` existir no
+> config, a escolha persistida no KV (manual via `/theme` **ou** a do plugin, ambos gravam
+> `kv.set("theme", ...)`) é sempre ignorada no restart. Sem `theme` no config, o KV vence e a
+> escolha sobrevive ao `/exit` (default continua `opencode`).
+
+O caminho relativo resolve em relação ao config file (`~/.config/opencode/`).
 
 ---
 
@@ -144,8 +155,8 @@ Caminho relativo resolve em relação ao config file (`~/.config/opencode/`).
 | ID | Tarefa | Requisito | Evidência |
 |----|--------|-----------|-----------|
 | T1 | Criar `tools/sync-transparent-themes.mjs` e gerar os 33 temas gêmeos em `themes/` | R1: todos os temas têm cópia transparente | ✅ 33 arquivos `<nome>-transparent.json`; `JSON.parse` OK em todos; 9 campos de fundo = `"none"` |
-| T2 | Criar `plugins/theme-opacity-sync.js` | R2: troca automática opaco↔transparente | ✅ `node --check` OK; teste de unidade `tools/test-theme-opacity-sync.mjs` com 9/9 cenários |
-| T3 | Editar `tui.json` (`theme` + `plugin`) | R3: tema e plugin carregados no start | ✅ `tui.json` válido; `keybinds` e `attention` preservados |
+| T2 | Criar `plugins/theme-opacity-sync.js` | R2: troca automática opaco↔transparente | ✅ `node --check` OK; teste de unidade `tools/test-theme-opacity-sync.mjs` com **18/18** cenários (escolha manual vence; sync só em transição do terminal) |
+| T3 | Editar `tui.json` (**sem** pin de `theme`, só `plugin`) | R3: plugin carregado no start; tema persistido no KV vence | ✅ `tui.json` válido e sem `theme` (v1.3.0); `keybinds` e `attention` preservados |
 | T4 | Verificação integrada | R1+R2+R3 | ✅ Contagem 33, schema, teste de unidade; ⏳ restart + toggle `A` no tmux (manual) |
 
 ---
@@ -164,12 +175,21 @@ done
 # Contagem: 33 gêmeos
 ls ~/.config/opencode/themes/*-transparent.json | wc -l
 
-# Nenhum campo backgroundMenu (rejeitado pelo schema)
-grep -l backgroundMenu ~/.config/opencode/themes/*.json || echo "OK: sem backgroundMenu"
+# Todos os 9 campos de fundo = "none" (incl. backgroundMenu, intencional)
+node -e "const fs=require('fs');const p='/home/albano/.config/opencode/themes';
+const F=['background','backgroundPanel','backgroundElement','backgroundMenu','diffAddedBg','diffRemovedBg','diffContextBg','diffAddedLineNumberBg','diffRemovedLineNumberBg'];
+for(const f of fs.readdirSync(p).filter(f=>f.endsWith('-transparent.json'))){const t=JSON.parse(fs.readFileSync(p+'/'+f,'utf8'));for(const k of F){if(t.theme[k]!=='none')process.exit(1)}}console.log('OK: fundos none em todos')"
 ```
 
 Depois: **reiniciar o opencode** (temas e plugin carregam no start), conferir a lista de
 temas no `/theme` (33 gêmeos presentes) e testar o toggle `A` no tmux com opacidade 0.8.
+Comportamento esperado (v2): escolher qualquer tema via `/theme` **mantém** a escolha; o
+toggle `A` é o que alterna entre o tema de base e seu gêmeo transparente.
+
+**Persistência (v1.3.0):** como `tui.json` não pina `theme`, a escolha do usuário (manual ou
+do plugin) é gravada no KV e reaplicada após `/exit` + restart. Teste manual: escolher um
+tema no `/theme`, executar `/exit`, abrir o opencode de novo → o tema escolhido deve estar
+ativo.
 
 ---
 
@@ -177,7 +197,7 @@ temas no `/theme` (33 gêmeos presentes) e testar o toggle `A` no tmux com opaci
 
 | Risco | Prob. | Impacto | Mitigação |
 |-------|-------|---------|-----------|
-| KV persiste o tema selecionado → pisca tema errado ~1s no start | Média | Baixo | Plugin corrige no primeiro poll (1s) |
+| Escolha manual de tema sobrescrita pelo auto-sync | — | — | **Corrigido na v2:** tema atual não setado pelo plugin vira base e não é forçado; sync só em transição do estado do terminal |
 | Alacritty não tem state file (toggle via IPC/socket) → plugin não reage | Alta | Médio | Follow-up opcional não aprovado: estender toggle para gravar state file do alacritty |
 | Restart obrigatório para carregar temas e plugin | Certa | Baixo | Documentado; config não é hot-reload |
 | tmux com `window-style` `bg=` explícito bloqueia transparência | Baixa | Médio | Config atual usa `bg=default`/`terminal` — OK |
@@ -191,6 +211,8 @@ temas no `/theme` (33 gêmeos presentes) e testar o toggle `A` no tmux com opaci
 
 | Versão | Data | Tipo | Descrição da Alteração |
 | :--- | :--- | :--- | :--- |
+| **1.3.0** | 2026-09-06 | IMPLEMENTED | Correção de persistência: remover `"theme": "opencode"` do `tui.json`. Causa raiz: no start o TUI resolve `config.theme ?? kv.get("theme")` — com `theme` no config, a escolha persistida no KV (manual ou do plugin) era sempre ignorada no restart. |
+| **1.2.0** | 2026-09-06 | IMPLEMENTED | Correção do auto-sync (v2): a escolha manual via `/theme` sempre vence; sync só em transição do estado do terminal (`nextAction` puro + máquina de estados `{terminal, base, lastSet}`); sem força no 1º poll (elimina piscada no start); teste ampliado para 18/18 cenários. |
 | **1.1.0** | 2026-09-06 | IMPLEMENTED | Implementação T1–T4 pelo build-auto: 33 gêmeos gerados, plugin + teste de unidade (9/9), `tui.json` editado. Correção: `backgroundMenu` incluído nos campos transformados (suportado pelo TUI, schema web desatualizado). |
 | **1.0.0** | 2026-09-06 | INITIAL | Refinamento do plano da sessão `ses_f8b79af30ffemE3825rc3hqgIj`: duplicar **todos** os 33 temas embutidos com variantes transparentes + plugin de sincronização generalizado. |
 

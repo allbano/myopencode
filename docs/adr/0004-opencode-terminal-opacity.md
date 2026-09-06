@@ -1,7 +1,7 @@
 ---
 title: "Temas gêmeos transparentes para todos os temas do opencode"
 slug: "opencode-terminal-opacity"
-version: 1.0.0
+version: 1.3.0
 status: "accepted"
 last_reviewed: 2026-09-06
 owners:
@@ -49,18 +49,26 @@ terminal, permitindo a opacidade). Demais campos e `defs` permanecem idênticos.
 
 ### 2.2 Plugin TUI `theme-opacity-sync.js`
 
-Plugin de arquivo (`export default { id: "theme-opacity-sync", tui }`) que:
+Plugin de arquivo (`export default { id: "theme-opacity-sync", tui }`) com máquina de
+estados pura (`nextAction`) e estado persistido entre polls
+`{ terminal, base, lastSet }`:
 
 1. Lê os state files do toggle e detecta opacidade `< 1.0` (terminal transparente).
-2. Se transparente e o tema atual tem gêmeo `<atual>-transparent`, troca para o gêmeo.
-3. Se opaco e o tema atual é um gêmeo (`-transparent`), volta para o original.
-4. Respeita a escolha manual de tema via `/theme` (só alterna entre pares conhecidos).
-5. Polling a cada 1s; `api.lifecycle.onDispose` limpa o timer.
+2. **Escolha manual via `/theme` sempre vence:** se o tema atual não foi setado pelo
+   próprio plugin, ele é registrado como tema de base e nada é forçado no poll.
+3. **Só age em transição do estado do terminal** (toggle `A` no tmux): transparente →
+   gêmeo `<base>-transparent`; opaco → tema de base original.
+4. No primeiro poll, o estado do terminal é apenas registrado (sem força no start).
+5. `system` e temas sem gêmeo são ignorados (transições viram no-op).
+6. Polling a cada 1s; `api.lifecycle.onDispose` limpa o timer.
 
 ### 2.3 Configuração
 
-`~/.config/opencode/tui.json` ganha `"theme": "opencode"` e
-`"plugin": ["./plugins/theme-opacity-sync.js"]`.
+`~/.config/opencode/tui.json` ganha apenas `"plugin": ["./plugins/theme-opacity-sync.js"]`.
+**Não** pinar `theme` no config: no start o TUI resolve `config.theme ?? kv.get("theme",
+"opencode")` (com `createEffect` reaplicando `config.theme`). Um `theme` fixo no config
+faria a escolha persistida no KV (manual ou do plugin, ambas gravadas por `theme.set()`) ser
+ignorada no restart — corrigido na v1.3.0.
 
 ### 2.4 Gerador
 
@@ -85,7 +93,6 @@ do branch `dev` do repositório do opencode (idempotente, para manutenção futu
 
 **Negativas / Riscos:**
 - Restart do opencode necessário para carregar temas e plugin.
-- KV persiste o tema selecionado → possível piscada de tema errado ~1s no start (plugin corrige).
 - Alacritty não tem state file → plugin não reage nesse terminal (follow-up opcional).
 - Drift de versão entre branch `dev` e a versão instalada (1.18.27) — verificar nomes no `/theme`.
 
@@ -93,6 +100,8 @@ do branch `dev` do repositório do opencode (idempotente, para manutenção futu
 
 | Versão | Data | Tipo | Descrição da Alteração |
 | :--- | :--- | :--- | :--- |
+| **1.3.0** | 2026-09-06 | UPDATED | Correção de persistência: remover `"theme": "opencode"` do `tui.json`. No start o TUI resolve `config.theme ?? kv.get("theme")`; com `theme` no config, o KV (escolha manual ou do plugin) era ignorado no restart. |
+| **1.2.0** | 2026-09-06 | UPDATED | Correção do auto-sync (v2): escolha manual via `/theme` sempre vence; sync só em transição do estado do terminal; sem força no 1º poll (elimina piscada no start); teste ampliado para 18/18 cenários. |
 | **1.1.0** | 2026-09-06 | UPDATED | Implementação concluída (build-auto). Correção: `backgroundMenu` incluído nos 9 campos transformados — suportado pelo TUI (`packages/tui/src/theme/index.ts`), schema web desatualizado. |
 | **1.0.0** | 2026-09-06 | INITIAL | Decisão de duplicar todos os 33 temas embutidos com variantes transparentes + plugin de sincronização generalizado. |
 
