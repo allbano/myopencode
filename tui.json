@@ -1,6 +1,5 @@
 {
   "$schema": "https://opencode.ai/tui.json",
-  "theme": "opencode",
   "plugin": ["./plugins/theme-opacity-sync.js"],
   "keybinds": {
     "command_list": "ctrl+p",
