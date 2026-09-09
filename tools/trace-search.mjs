@@ -1,8 +1,8 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 // trace-search.mjs — consulta histórica dos traces de agentes
 //
 // Uso:
-//   node trace-search.mjs [opções]
+//   bun trace-search.mjs [opções]
 //
 // Opções:
 //   --agent <nome>     filtra por agente (ex.: build-guarded)
@@ -16,9 +16,9 @@
 //   --limit <n>        máximo de eventos impressos (padrão: 200)
 //
 // Exemplos:
-//   node trace-search.mjs --agent build-auto --today
-//   node trace-search.mjs --event permission.asked --date 2026-08-31
-//   node trace-search.mjs --session ses_abc --stats
+//   bun trace-search.mjs --agent build-auto --today
+//   bun trace-search.mjs --event permission.asked --date 2026-08-31
+//   bun trace-search.mjs --session ses_abc --stats
 
 import { readFile, readdir } from "node:fs/promises"
 import { existsSync } from "node:fs"
@@ -49,7 +49,7 @@ for (let i = 0; i < args.length; i++) {
 opt.limit ??= 200
 
 function readmeSync() {
-  return `Uso: node trace-search.mjs [--agent X] [--session id] [--event ev] [--tool t]
+  return `Uso: bun trace-search.mjs [--agent X] [--session id] [--event ev] [--tool t]
        [--date AAAA-MM-DD | --today] [--errors] [--stats] [--limit n]`
 }
 

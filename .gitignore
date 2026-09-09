@@ -1,5 +1,8 @@
-# Dependências Node (regeneráveis via npm install)
+# Dependências (regeneráveis via bun install)
 node_modules/
+
+# Artefatos de build nativo (node-gyp, etc.)
+build/
 
 # Cache e arquivos temporários do opencode
 .cache/

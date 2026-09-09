@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 // sync-transparent-themes.mjs
 //
 // Gera os temas gêmeos transparentes do opencode em ~/.config/opencode/themes/.
@@ -6,7 +6,7 @@
 // original com os campos de fundo definidos como "none" (usa o fundo do
 // terminal, permitindo a opacidade).
 //
-// Uso: node tools/sync-transparent-themes.mjs
+// Uso: bun tools/sync-transparent-themes.mjs
 // Idempotente: re-executar regenera os 33 arquivos (manutenção quando o
 // opencode atualizar temas).
 //
