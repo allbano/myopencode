@@ -10,7 +10,7 @@
   "snapshot": true,
   // Cada projeto habilita apenas o que faz sentido para seu stack.
   "formatter": false,
-  "lsp": false,
+  "lsp": true,
   "watcher": {
     "ignore": [
       "**/.git/**",

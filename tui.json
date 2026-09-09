@@ -1,6 +1,6 @@
 {
   "$schema": "https://opencode.ai/tui.json",
-  "plugin": ["./plugins/theme-opacity-sync.js"],
+  "plugin": ["./plugins/theme-opacity-sync.js", "./plugins/session-info-tui.js"],
   "keybinds": {
     "command_list": "ctrl+p",
     "agent_list": "<leader>a",
